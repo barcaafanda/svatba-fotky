@@ -54,7 +54,7 @@ export default function Home() {
                   <video
                     src={photo.url}
                     controls
-                    className="w-full h-full max-h-96 object-cover bg-black"
+                    className="w-full h-auto max-h-96 object-cover bg-black rounded"
                     preload="metadata"
                   />
                 ) : (
@@ -63,7 +63,7 @@ export default function Home() {
                     alt="Nahraná fotka"
                     width={500}
                     height={500}
-                    className="w-full h-auto object-cover"
+                    className="w-full h-auto object-cover rounded"
                   />
                 )}
 
