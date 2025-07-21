@@ -1,33 +1,37 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import UploadForm from '../components/UploadForm';
 import { supabase } from '../lib/supabase';
 import Image from 'next/image';
 
-type Photo = {
-  id: string;
+interface Photo {
+  id: number;
   url: string;
   public_id: string;
-};
+  type: string;
+}
 
 export default function Home() {
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [modalIndex, setModalIndex] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const fetchPhotos = async () => {
-    const { data, error } = await supabase.from('photos').select('*').order('created_at', { ascending: false });
-    if (!error && data) {
-      setPhotos(data);
-    }
+    setLoading(true);
+    const { data, error } = await supabase.from('photos').select('*').order('id', { ascending: false });
+    if (error) console.error('Fetch error:', error.message);
+    else setPhotos(data || []);
+    setLoading(false);
   };
 
-  const deletePhoto = async (public_id: string) => {
+  const handleDelete = async (public_id: string) => {
+    const confirmed = confirm('Opravdu chceš smazat tento soubor?');
+    if (!confirmed) return;
+
     const res = await fetch(`/api/upload?public_id=${public_id}`, { method: 'DELETE' });
     if (res.ok) {
-      await fetchPhotos();
+      setPhotos((prev) => prev.filter((p) => p.public_id !== public_id));
     } else {
-      alert('Mazání selhalo');
+      alert('Smazání selhalo.');
     }
   };
 
@@ -36,61 +40,44 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-semibold mb-6 text-center">Svatba – galerie</h1>
+    <main className="max-w-4xl mx-auto p-4">
+      <h1 className="text-3xl font-bold text-center mb-6">📸 Naše svatební galerie</h1>
       <UploadForm onUpload={fetchPhotos} />
+      {loading ? (
+        <p className="text-center text-gray-500">Načítám fotky a videa...</p>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {photos.map((photo) => (
+            photo.url && (
+              <div key={photo.id} className="relative group border rounded-xl overflow-hidden shadow-sm">
+                {photo.type === 'video' ? (
+                  <video
+                    src={photo.url}
+                    controls
+                    className="w-full h-full max-h-96 object-cover bg-black"
+                    preload="metadata"
+                  />
+                ) : (
+                  <Image
+                    src={photo.url}
+                    alt="Nahraná fotka"
+                    width={500}
+                    height={500}
+                    className="w-full h-auto object-cover"
+                  />
+                )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {photos.map((photo, index) => (
-          <div key={photo.id} className="relative group">
-            <img
-              src={photo.url}
-              alt="Foto"
-              className="object-cover w-full h-40 rounded-lg cursor-pointer"
-              onClick={() => setModalIndex(index)}
-            />
-            <button
-              onClick={() => deletePhoto(photo.public_id)}
-              className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition"
-            >
-              Smazat
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {modalIndex !== null && (
-        <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
-          onClick={() => setModalIndex(null)}
-        >
-          <div className="relative max-w-3xl w-full px-4" onClick={(e) => e.stopPropagation()}>
-            <img
-              src={photos[modalIndex].url}
-              alt="Zvětšená fotka"
-              className="w-full max-h-[80vh] object-contain rounded shadow"
-            />
-            <button
-              onClick={() => setModalIndex((prev) => (prev! - 1 + photos.length) % photos.length)}
-              className="absolute left-0 top-1/2 -translate-y-1/2 px-4 text-white text-3xl font-bold"
-            >
-              ‹
-            </button>
-            <button
-              onClick={() => setModalIndex((prev) => (prev! + 1) % photos.length)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 px-4 text-white text-3xl font-bold"
-            >
-              ›
-            </button>
-            <button
-              onClick={() => setModalIndex(null)}
-              className="absolute top-2 right-2 text-white text-xl"
-            >
-              ✕
-            </button>
-          </div>
+                <button
+                  onClick={() => handleDelete(photo.public_id)}
+                  className="absolute top-2 right-2 bg-white bg-opacity-80 hover:bg-red-500 hover:text-white text-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition"
+                >
+                  Smazat
+                </button>
+              </div>
+            )
+          ))}
         </div>
       )}
-    </div>
+    </main>
   );
 }

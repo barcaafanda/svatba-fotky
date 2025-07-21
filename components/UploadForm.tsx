@@ -9,7 +9,9 @@ export default function UploadForm({ onUpload }: { onUpload: () => void }) {
     if (!files || !files.length) return;
 
     const formData = new FormData();
-    Array.from(files).forEach(file => formData.append('file', file));
+    Array.from(files).forEach(file => {
+      formData.append('file', file);
+    });
 
     setUploading(true);
     try {
@@ -47,15 +49,18 @@ export default function UploadForm({ onUpload }: { onUpload: () => void }) {
       onClick={handleClick}
       className="border-2 border-dashed border-gray-400 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-100 transition mb-6"
     >
-      <p className="text-gray-600 mb-2">Přetáhni sem fotky nebo klikni pro výběr</p>
+      <p className="text-gray-600 mb-2">📷 Přetáhni sem fotky nebo klepni pro výběr</p>
+
+      {/* 📥 Důležitý vstup pro výběr souborů */}
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         multiple
         hidden
         onChange={(e) => handleFiles(e.target.files)}
       />
+
       {uploading && <p className="text-sm text-blue-600 mt-2">Nahrávání...</p>}
     </div>
   );
