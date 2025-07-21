@@ -3,18 +3,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Readable } from 'stream';
 import { createClient } from '@supabase/supabase-js';
 
+// Konfigurace Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
   api_key: process.env.CLOUDINARY_API_KEY!,
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
+// Připojení k Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!
+  process.env.SUPABASE_SECRET_KEY! // service_role key – má právo zapisovat
 );
 
-// ✅ POST - nahrávání fotek/videí
+// 📤 Nahrávání
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -33,6 +35,7 @@ export async function POST(req: NextRequest) {
       const mimetype = file.type;
       const resourceType = mimetype.startsWith('video') ? 'video' : 'image';
 
+      // Nahrání na Cloudinary
       const uploadResult: any = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           {
@@ -47,6 +50,7 @@ export async function POST(req: NextRequest) {
         Readable.from(buffer).pipe(stream);
       });
 
+      // Uložení do Supabase
       const { error } = await supabase.from('photos').insert({
         url: uploadResult.secure_url,
         public_id: uploadResult.public_id,
@@ -67,7 +71,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ✅ DELETE - mazání
+// 🗑️ Smazání
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -77,10 +81,12 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Chybí public_id' }, { status: 400 });
     }
 
+    // Smazání z Cloudinary
     const cloudinaryResult = await cloudinary.uploader.destroy(public_id, {
       resource_type: 'auto',
     });
 
+    // Smazání z databáze
     const { error } = await supabase.from('photos').delete().eq('public_id', public_id);
 
     if (error) {
@@ -94,4 +100,3 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Mazání selhalo' }, { status: 500 });
   }
 }
-

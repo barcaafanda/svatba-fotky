@@ -7,20 +7,20 @@ export default function UploadForm({ onUpload }: { onUpload: () => void }) {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).cloudinary) {
-      const cloudinary = (window as any).cloudinary;
-
-      widgetRef.current = cloudinary.createUploadWidget(
+      widgetRef.current = (window as any).cloudinary.createUploadWidget(
         {
-          cloudName: 'dskwsp31z', // 🔁 dskwsp31z
-          uploadPreset: 'ml_default', // 🔁 ml_default
+          cloudName: 'dskwsp31z',
+          uploadPreset: 'ml_default',
           folder: 'svatba',
           multiple: true,
           resourceType: 'auto',
+          sources: ['local', 'camera'],
+          maxFileSize: 150000000, // 150 MB
         },
         (error: any, result: any) => {
-          if (!error && result && result.event === 'success') {
+          if (!error && result.event === 'success') {
             console.log('Upload success:', result.info);
-            onUpload(); // aktualizuje fotky po nahrání
+            onUpload(); // Refresh gallery
           }
         }
       );
@@ -33,7 +33,7 @@ export default function UploadForm({ onUpload }: { onUpload: () => void }) {
         onClick={() => widgetRef.current?.open()}
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
       >
-        📤 Nahrát pomocí Cloudinary
+        📤 Nahrát fotku/video z mobilu
       </button>
     </div>
   );
