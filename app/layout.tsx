@@ -3,24 +3,27 @@ import './globals.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Svatební Galerie',
-  description: 'Nahrávej a prohlížej fotky a videa ze svatby',
+  title: 'Svatba',
+  description: 'Galerie svatebních fotek',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="cs">
       <head>
-        {/* Cloudinary Upload Widget */}
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* ✅ Cloudinary Widget */}
         <script
           src="https://widget.cloudinary.com/v2.0/global/all.js"
           type="text/javascript"
+          defer
         ></script>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
-      <body className="bg-gray-50 text-gray-900 min-h-screen antialiased">
+      <body className="bg-white text-gray-900 min-h-screen antialiased">
         {children}
       </body>
     </html>
   );
 }
+
