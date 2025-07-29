@@ -1,38 +1,22 @@
-import { promises as fs } from "fs";
-import path from "path";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
-const dataFile = path.join(process.cwd(), "photos.json");
+export async function POST(req: Request) {
+  const body = await req.json();
+  const { url, public_id, type } = body;
 
-export async function GET() {
-  try {
-    const file = await fs.readFile(dataFile, "utf-8");
-    const urls = JSON.parse(file);
-    return NextResponse.json({ urls });
-  } catch {
-    return NextResponse.json({ urls: [] });
+  if (!url || !public_id || !type) {
+    return NextResponse.json({ error: 'Chybí data' }, { status: 400 });
   }
-}
 
-export async function POST(req: NextRequest) {
-  try {
-    const { url } = await req.json();
-    if (!url) return NextResponse.json({ error: "Missing URL" }, { status: 400 });
+  const { error } = await supabase.from('photos').insert([
+    { url, public_id, type },
+  ]);
 
-    let current: string[] = [];
-    try {
-      const file = await fs.readFile(dataFile, "utf-8");
-      current = JSON.parse(file);
-    } catch {
-      current = [];
-    }
-
-    current.push(url);
-    await fs.writeFile(dataFile, JSON.stringify(current, null, 2), "utf-8");
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to save photo" }, { status: 500 });
+  if (error) {
+    console.error('Chyba při ukládání do Supabase:', error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
 
+  return NextResponse.json({ success: true });
+}
