@@ -49,4 +49,3 @@ export default function UploadForm({ onUpload }: { onUpload: () => void }) {
     </div>
   );
 }
-

@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import UploadForm from '../components/UploadForm';
-import { supabase } from '../lib/supabase';
+import UploadForm from './components/UploadForm';
+import { supabase } from './lib/supabase';
 
 type Photo = {
   id: number;
@@ -60,32 +60,15 @@ export default function Home() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {photos.map((photo) =>
             photo.url ? (
-              <div
-                key={photo.id}
-                className="relative group border rounded-xl overflow-hidden shadow-sm"
-              >
+              <div key={photo.id} className="relative group border rounded-xl overflow-hidden shadow-sm">
                 {photo.type === 'video' ? (
-                  <video
-                    src={photo.url}
-                    controls
-                    className="w-full h-auto bg-black max-h-96"
-                    preload="metadata"
-                  >
+                  <video src={photo.url} controls className="w-full h-auto bg-black max-h-96" preload="metadata">
                     Váš prohlížeč nepodporuje přehrávání videa.
                   </video>
                 ) : (
-                  <img
-                    src={photo.url}
-                    alt="Nahraná fotka"
-                    className="w-full h-auto object-cover"
-                    loading="lazy"
-                  />
+                  <img src={photo.url} alt="Nahraná fotka" className="w-full h-auto object-cover" loading="lazy" />
                 )}
-
-                <button
-                  onClick={() => handleDelete(photo.public_id)}
-                  className="absolute top-2 right-2 bg-white bg-opacity-80 hover:bg-red-500 hover:text-white text-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition"
-                >
+                <button onClick={() => handleDelete(photo.public_id)} className="absolute top-2 right-2 bg-white bg-opacity-80 hover:bg-red-500 hover:text-white text-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">
                   Smazat
                 </button>
               </div>
@@ -96,4 +79,3 @@ export default function Home() {
     </main>
   );
 }
-
