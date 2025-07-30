@@ -19,20 +19,23 @@ export default function UploadForm({ onUpload }: { onUpload: () => void }) {
               folder: 'svatba',
               resourceType: 'auto',
             },
-            (error: any, result: any) => {
+            async (error: any, result: any) => {
               if (!error && result?.event === 'success') {
-                const file = result.info;
-                fetch('/api/upload', {
+                const res = await fetch('/api/upload', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    url: file.secure_url,
-                    public_id: file.public_id,
-                    type: file.resource_type,
+                    url: result.info.secure_url,
+                    public_id: result.info.public_id,
+                    type: result.info.resource_type,
                   }),
-                }).then(() => {
-                  onUpload();
                 });
+
+                if (res.ok) {
+                  onUpload();
+                } else {
+                  console.error('Chyba při ukládání na server.');
+                }
               }
             }
           );
