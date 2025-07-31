@@ -42,7 +42,11 @@ export default function Home() {
                 onClick={() => setLightboxIndex(images.indexOf(photo.url))}
               />
             ) : (
-              <video src={photo.url} controls style={{ width: '100%', borderRadius: '8px' }} />
+              <video 
+                src={photo.url} 
+                controls  
+                className="w-48 h-48 object-cover rounded shadow"
+              />
             )}
           </div>
         ))}
