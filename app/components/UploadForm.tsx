@@ -12,7 +12,7 @@ export default function UploadForm() {
     setError(null);
     setSuccess(false);
 
-    const fileInput = (e.currentTarget.elements.namedItem('file') as HTMLInputElement);
+    const fileInput = e.currentTarget.elements.namedItem('file') as HTMLInputElement;
     const file = fileInput?.files?.[0];
 
     if (!file) {
@@ -32,25 +32,27 @@ export default function UploadForm() {
     formData.append('upload_preset', 'ml_default');
 
     try {
-      const res = await fetch(`https://api.cloudinary.com/v1_1/dskwsp31z/${file.type.startsWith('video') ? 'video' : 'image'}/upload`, {
-        method: 'POST',
-        body: formData,
-      });
+      const cloudinaryRes = await fetch(
+        `https://api.cloudinary.com/v1_1/dskwsp31z/${file.type.startsWith('video') ? 'video' : 'image'}/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
 
-      const data = await res.json();
+      const data = await cloudinaryRes.json();
 
       if (!data.secure_url) {
         throw new Error('Chyba při nahrávání na Cloudinary.');
       }
 
-      // Záznam do Supabase
       const response = await fetch('/api/photos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           url: data.secure_url,
           public_id: data.public_id,
-          type: file.type.startsWith('video') ? 'video' : 'image',
+          type: file.type || (file.name.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg'),
         }),
       });
 
