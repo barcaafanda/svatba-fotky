@@ -1,41 +1,50 @@
-"use client";
-import { useState } from "react";
+'use client';
+import { useState } from 'react';
 
 export default function UploadForm() {
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [file, setFile] = useState<File | null>(null);
+  const [type, setType] = useState<'image' | 'video'>('image');
+  const [uploading, setUploading] = useState(false);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
+  const handleUpload = async () => {
+    if (!file) return;
 
-    const maxSize = 100 * 1024 * 1024; // 100 MB
-    const validFiles: File[] = [];
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'ml_default');
 
-    for (const file of Array.from(files)) {
-      if (file.size > maxSize) {
-        alert(`Soubor ${file.name} je příliš velký (limit je 100 MB).`);
-      } else {
-        validFiles.push(file);
-      }
+    const resourceType = type === 'video' ? 'video' : 'image';
+    const cloudName = 'dskwsp31z';
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (data.secure_url) {
+      await fetch('/api/photos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: data.secure_url, public_id: data.public_id, type }),
+      });
+      window.location.reload();
     }
 
-    setSelectedFiles(validFiles);
+    setUploading(false);
   };
 
   return (
-    <div className="mb-4">
-      <label className="block mb-2 text-sm font-medium text-gray-700">
-        Vyber fotky nebo videa:
-      </label>
-      <input
-        type="file"
-        accept="image/*,video/*"
-        multiple
-        onChange={handleFileChange}
-        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
-                   file:rounded-full file:border-0 file:text-sm file:font-semibold
-                   file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-      />
+    <div style={{ marginBottom: '20px' }}>
+      <input type="file" accept={type === 'image' ? 'image/*' : 'video/*'} onChange={e => setFile(e.target.files?.[0] || null)} />
+      <select onChange={e => setType(e.target.value as 'image' | 'video')} value={type}>
+        <option value="image">Obrázek</option>
+        <option value="video">Video</option>
+      </select>
+      <button onClick={handleUpload} disabled={uploading || !file}>
+        {uploading ? 'Nahrávám...' : 'Nahrát'}
+      </button>
     </div>
   );
 }

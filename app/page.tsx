@@ -1,55 +1,62 @@
-"use client";
-import { useEffect, useState } from "react";
-import UploadForm from "./components/UploadForm";
-import Lightbox from "react-image-lightbox";
-import "react-image-lightbox/style.css";
-import { supabase } from "@/lib/supabase";
+'use client';
+import { useEffect, useState } from 'react';
+import UploadForm from './components/UploadForm';
+import { supabase } from '@/lib/supabase';
+import Lightbox from 'react-image-lightbox';
+import 'react-image-lightbox/style.css';
 
 type Photo = {
   id: number;
   url: string;
+  public_id: string;
   type: string;
+  created_at: string;
 };
 
-export default function Page() {
+export default function Home() {
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [currentImage, setCurrentImage] = useState("");
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchPhotos = async () => {
-      const { data, error } = await supabase.from("photos").select("*");
-      if (!error && data) {
-        setPhotos(data);
-      }
+      const { data, error } = await supabase.from('photos').select('*').order('created_at', { ascending: false });
+      if (!error && data) setPhotos(data);
     };
     fetchPhotos();
   }, []);
 
-  const handleImageClick = (url: string) => {
-    setCurrentImage(url);
-    setLightboxOpen(true);
-  };
+  const images = photos.filter(p => p.type === 'image').map(p => p.url);
 
   return (
-    <main className="max-w-4xl mx-auto p-4">
-      <h1 className="text-3xl font-bold text-center mb-6">📸 Galerie</h1>
+    <main>
+      <h1>Fotky a videa ze svatby</h1>
       <UploadForm />
-      <div className="grid grid-cols-3 gap-4">
-        {photos.map((photo) => (
-          <img
-            key={photo.id}
-            src={photo.url}
-            alt="Nahraná fotka"
-            className="w-32 h-32 object-cover rounded cursor-pointer shadow"
-            onClick={() => handleImageClick(photo.url)}
-          />
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px' }}>
+        {photos.map((photo, idx) => (
+          <div key={photo.id} style={{ width: '150px', cursor: photo.type === 'image' ? 'pointer' : 'default' }}>
+            {photo.type === 'image' ? (
+              <img
+                src={photo.url}
+                alt=""
+                style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
+                onClick={() => setLightboxIndex(images.indexOf(photo.url))}
+              />
+            ) : (
+              <video src={photo.url} controls style={{ width: '100%', borderRadius: '8px' }} />
+            )}
+          </div>
         ))}
       </div>
-      {lightboxOpen && (
+      {lightboxIndex !== null && (
         <Lightbox
-          mainSrc={currentImage}
-          onCloseRequest={() => setLightboxOpen(false)}
+          mainSrc={images[lightboxIndex]}
+          nextSrc={images[(lightboxIndex + 1) % images.length]}
+          prevSrc={images[(lightboxIndex + images.length - 1) % images.length]}
+          onCloseRequest={() => setLightboxIndex(null)}
+          onMovePrevRequest={() =>
+            setLightboxIndex((lightboxIndex + images.length - 1) % images.length)
+          }
+          onMoveNextRequest={() => setLightboxIndex((lightboxIndex + 1) % images.length)}
         />
       )}
     </main>
