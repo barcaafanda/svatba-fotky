@@ -1,65 +1,41 @@
-'use client';
+"use client";
+import { useState } from "react";
 
-import { useEffect, useRef, useState } from 'react';
+export default function UploadForm() {
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-export default function UploadForm({ onUpload }: { onUpload: () => void }) {
-  const widgetRef = useRef<any>(null);
-  const [ready, setReady] = useState(false);
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const interval = setInterval(() => {
-        const cloudinary = (window as any).cloudinary;
-        if (cloudinary && !widgetRef.current) {
-          widgetRef.current = cloudinary.createUploadWidget(
-            {
-              cloudName: 'dskwsp31z',
-              uploadPreset: 'ml_default',
-              multiple: true,
-              folder: 'svatba',
-              resourceType: 'auto',
-            },
-            async (error: any, result: any) => {
-              if (!error && result?.event === 'success') {
-                const res = await fetch('/api/upload', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    url: result.info.secure_url,
-                    public_id: result.info.public_id,
-                    type: result.info.resource_type,
-                  }),
-                });
+    const maxSize = 100 * 1024 * 1024; // 100 MB
+    const validFiles: File[] = [];
 
-                if (res.ok) {
-                  onUpload();
-                } else {
-                  console.error('Chyba při ukládání na server.');
-                }
-              }
-            }
-          );
-          setReady(true);
-          clearInterval(interval);
-        }
-      }, 500);
-
-      return () => clearInterval(interval);
+    for (const file of Array.from(files)) {
+      if (file.size > maxSize) {
+        alert(`Soubor ${file.name} je příliš velký (limit je 100 MB).`);
+      } else {
+        validFiles.push(file);
+      }
     }
-  }, [onUpload]);
+
+    setSelectedFiles(validFiles);
+  };
 
   return (
-    <div className="text-center my-6">
-      {ready ? (
-        <button
-          onClick={() => widgetRef.current?.open()}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-        >
-          📤 Nahrát fotky nebo video
-        </button>
-      ) : (
-        <p className="text-gray-500">Načítám nástroj pro nahrávání…</p>
-      )}
+    <div className="mb-4">
+      <label className="block mb-2 text-sm font-medium text-gray-700">
+        Vyber fotky nebo videa:
+      </label>
+      <input
+        type="file"
+        accept="image/*,video/*"
+        multiple
+        onChange={handleFileChange}
+        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
+                   file:rounded-full file:border-0 file:text-sm file:font-semibold
+                   file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+      />
     </div>
   );
 }
