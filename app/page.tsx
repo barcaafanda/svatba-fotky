@@ -40,28 +40,29 @@ export default function Home() {
 
       <UploadForm />
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-10">
-        {photos.map((photo, index) => (
-          <div key={photo.id} className="w-full max-w-[300px] mx-auto">
-            {photo.type.startsWith('image') ? (
-              <img
-                src={photo.url}
-                alt="uploaded"
-                className="cursor-pointer w-full h-auto rounded hover:opacity-80"
-                onClick={() => setLightboxIndex(index)}
-              />
-            ) : (
-              <video
-                controls
-                className="w-full h-auto rounded"
-              >
-                <source src={photo.url} type={photo.type} />
-                Váš prohlížeč nepodporuje video tag.
-              </video>
-            )}
-          </div>
-        ))}
-      </div>
+     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-10">
+  {photos.map((photo, index) => (
+    <div key={photo.id} className="w-full max-w-[300px] mx-auto">
+      {photo.type.startsWith('image') ? (
+        <img
+          src={photo.url}
+          alt="uploaded"
+          className="cursor-pointer w-full h-auto rounded hover:opacity-80"
+          onClick={() => setLightboxIndex(index)}
+        />
+      ) : (
+        <video
+          controls
+          className="w-full h-auto rounded"
+          style={{ maxWidth: '100%', display: 'block' }}
+        >
+          <source src={photo.url} type={photo.type || 'video/mp4'} />
+          Váš prohlížeč nepodporuje video tag.
+        </video>
+      )}
+    </div>
+  ))}
+</div>
 
       {lightboxIndex !== null && (
         <Lightbox
