@@ -7,7 +7,7 @@ type Photo = {
   id: number;
   url: string;
   public_id: string;
-  type: string;
+  type: 'image' | 'video';
 };
 
 export default function Home() {
@@ -15,7 +15,7 @@ export default function Home() {
 
   useEffect(() => {
     const fetchPhotos = async () => {
-      const res = await fetch('/api/photos', { cache: 'no-store' });
+      const res = await fetch('/api/photos');
       const data = await res.json();
       setPhotos(data);
     };
@@ -24,23 +24,23 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-center">📸 Svatba – Nahrávání fotek a videí</h1>
+    <main className="min-h-screen p-8">
+      <h1 className="text-3xl font-bold text-center mb-6">📸 Naše svatební galerie</h1>
       <UploadForm />
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8">
+      <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {photos.map((photo) => (
-          <div key={photo.id} className="w-full aspect-square overflow-hidden rounded shadow">
-            {photo.type.startsWith('video') ? (
+          <div key={photo.id} className="w-full">
+            {photo.type === 'image' ? (
+              <img
+                src={photo.url}
+                alt="Uploaded"
+                className="w-full h-auto object-cover rounded shadow"
+              />
+            ) : (
               <video
                 src={photo.url}
                 controls
-                className="object-cover w-full h-full"
-              />
-            ) : (
-              <img
-                src={photo.url}
-                alt=""
-                className="object-cover w-full h-full"
+                className="w-full h-auto object-cover rounded shadow"
               />
             )}
           </div>
