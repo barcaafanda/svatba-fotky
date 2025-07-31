@@ -15,8 +15,7 @@ type Photo = {
 
 export default function Home() {
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -25,59 +24,58 @@ export default function Home() {
         .select('*')
         .order('id', { ascending: false });
 
-      if (error) {
-        console.error('Chyba při načítání fotek:', error.message);
-      } else {
-        setPhotos(data || []);
+      if (!error && data) {
+        setPhotos(data);
       }
     };
 
     fetchPhotos();
   }, []);
 
-  const images = photos.filter((p) => p.type === 'image').map((p) => p.url);
+  const imageUrls = photos.filter(p => p.type.startsWith('image')).map(p => p.url);
 
   return (
-    <main className="max-w-4xl mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-center">📸 Svatba Fotky & Videa</h1>
+    <main className="max-w-4xl mx-auto p-6">
+      <h1 className="text-3xl font-bold text-center mb-6">📸 Svatba - Galerie</h1>
 
       <UploadForm />
 
-      <div className="flex flex-wrap justify-center mt-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-10">
         {photos.map((photo, index) => (
-          <div key={photo.id} className="m-2">
-            {photo.type === 'image' ? (
+          <div key={photo.id} className="w-full max-w-[300px] mx-auto">
+            {photo.type.startsWith('image') ? (
               <img
                 src={photo.url}
-                alt=""
-                className="w-12 h-12 object-cover rounded shadow cursor-pointer"
-                onClick={() => {
-                  setLightboxIndex(images.indexOf(photo.url));
-                  setLightboxOpen(true);
-                }}
+                alt="uploaded"
+                className="cursor-pointer w-full h-auto rounded hover:opacity-80"
+                onClick={() => setLightboxIndex(index)}
               />
             ) : (
               <video
-                src={photo.url}
                 controls
-                className="w-12 h-12 object-cover rounded shadow"
-              />
+                className="w-full h-auto rounded"
+              >
+                <source src={photo.url} type={photo.type} />
+                Váš prohlížeč nepodporuje video tag.
+              </video>
             )}
           </div>
         ))}
       </div>
 
-      {lightboxOpen && (
+      {lightboxIndex !== null && (
         <Lightbox
-          mainSrc={images[lightboxIndex]}
-          nextSrc={images[(lightboxIndex + 1) % images.length]}
-          prevSrc={images[(lightboxIndex + images.length - 1) % images.length]}
-          onCloseRequest={() => setLightboxOpen(false)}
+          mainSrc={imageUrls[lightboxIndex]}
+          nextSrc={imageUrls[(lightboxIndex + 1) % imageUrls.length]}
+          prevSrc={imageUrls[(lightboxIndex + imageUrls.length - 1) % imageUrls.length]}
+          onCloseRequest={() => setLightboxIndex(null)}
           onMovePrevRequest={() =>
-            setLightboxIndex((lightboxIndex + images.length - 1) % images.length)
+            setLightboxIndex(
+              (lightboxIndex + imageUrls.length - 1) % imageUrls.length
+            )
           }
           onMoveNextRequest={() =>
-            setLightboxIndex((lightboxIndex + 1) % images.length)
+            setLightboxIndex((lightboxIndex + 1) % imageUrls.length)
           }
         />
       )}
