@@ -34,13 +34,13 @@ export default function Home() {
               <img
                 src={photo.url}
                 alt="Uploaded"
-                className="w-full h-auto object-cover rounded shadow"
+                className="w-full h-48 object-cover rounded shadow"
               />
             ) : (
               <video
                 src={photo.url}
                 controls
-                className="w-full h-auto object-cover rounded shadow"
+                className="w-full h-48 object-cover rounded shadow"
               />
             )}
           </div>
