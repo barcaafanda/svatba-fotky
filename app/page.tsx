@@ -71,7 +71,7 @@ export default function Home() {
                 src={photo.url}
                 controls
                 preload="metadata"
-                poster={photo.url + '#t=0.5'}
+                poster={`https://res.cloudinary.com/dskwsp31z/video/upload/so_1/${photo.public_id}.jpg`}
                 style={{
                   width: '100%',
                   height: '100%',
