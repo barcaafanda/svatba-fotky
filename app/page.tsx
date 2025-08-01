@@ -70,6 +70,8 @@ export default function Home() {
               <video
                 src={photo.url}
                 controls
+                preload="metadata"
+                poster={photo.url + '#t=0.5'}
                 style={{
                   width: '100%',
                   height: '100%',
