@@ -28,56 +28,31 @@ export default function Home() {
     fetchPhotos();
   }, []);
 
-  const images = photos.filter(p => p.type === 'image').map(p => p.url);
+  const images = photos.filter((p) => p.type === 'image').map((p) => p.url);
 
   return (
-    <main>
-      <h1>Fotky a videa ze svatby</h1>
+    <main
+      className="min-h-screen bg-fixed bg-cover bg-center p-4"
+      style={{ backgroundImage: 'url("/background.jpg")' }}
+    >
+      <h1 className="text-white text-2xl font-bold mb-4 drop-shadow-lg">Fotky a videa ze svatby</h1>
       <UploadForm />
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '10px',
-          marginTop: '20px',
-        }}
-      >
-        {photos.map((photo) => (
-          <div
-            key={photo.id}
-            style={{
-              width: '150px',
-              height: '150px',
-              overflow: 'hidden',
-              borderRadius: '8px',
-              position: 'relative',
-              backgroundColor: '#f3f3f3',
-              cursor: photo.type === 'image' ? 'pointer' : 'default',
-            }}
-          >
+      <div className="flex flex-wrap gap-4 justify-start mt-6">
+        {photos.map((photo, idx) => (
+          <div key={photo.id} className="w-[150px]">
             {photo.type === 'image' ? (
               <img
                 src={photo.url}
                 alt=""
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                }}
+                className="w-full h-auto rounded-lg cursor-pointer"
                 onClick={() => setLightboxIndex(images.indexOf(photo.url))}
               />
             ) : (
               <video
                 src={photo.url}
                 controls
-                preload="metadata"
-                poster={`https://res.cloudinary.com/dskwsp31z/video/upload/so_1/${photo.public_id}.jpg`}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  display: 'block',
-                }}
+                poster="/video-placeholder.jpg"
+                className="w-full h-auto rounded-lg"
               />
             )}
           </div>
