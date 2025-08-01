@@ -1,51 +1,64 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import UploadForm from './components/UploadForm';
+import { supabase } from '@/lib/supabase';
+import Lightbox from 'react-image-lightbox';
+import 'react-image-lightbox/style.css';
 
 type Photo = {
   id: number;
   url: string;
   public_id: string;
-  type: 'image' | 'video';
+  type: string;
+  created_at: string;
 };
 
 export default function Home() {
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchPhotos = async () => {
-      const res = await fetch('/api/photos');
-      const data = await res.json();
-      setPhotos(data);
+      const { data, error } = await supabase.from('photos').select('*').order('created_at', { ascending: false });
+      if (!error && data) setPhotos(data);
     };
-
     fetchPhotos();
   }, []);
 
+  const images = photos.filter(p => p.type === 'image').map(p => p.url);
+
   return (
-    <main className="min-h-screen p-8">
-      <h1 className="text-3xl font-bold text-center mb-6">📸 Naše svatební galerie</h1>
+    <main>
+      <h1>Fotky a videa ze svatby</h1>
       <UploadForm />
-      <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {photos.map((photo) => (
-          <div key={photo.id} className="w-full">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px' }}>
+        {photos.map((photo, idx) => (
+          <div key={photo.id} style={{ width: '150px', cursor: photo.type === 'image' ? 'pointer' : 'default' }}>
             {photo.type === 'image' ? (
               <img
                 src={photo.url}
-                alt="Uploaded"
-                className="w-full h-48 object-cover rounded shadow"
+                alt=""
+                style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
+                onClick={() => setLightboxIndex(images.indexOf(photo.url))}
               />
             ) : (
-              <video
-                src={photo.url}
-                controls
-                className="w-full h-48 object-cover rounded shadow"
-              />
+              <video src={photo.url} controls style={{ width: '100%', borderRadius: '8px' }} />
             )}
           </div>
         ))}
       </div>
+      {lightboxIndex !== null && (
+        <Lightbox
+          mainSrc={images[lightboxIndex]}
+          nextSrc={images[(lightboxIndex + 1) % images.length]}
+          prevSrc={images[(lightboxIndex + images.length - 1) % images.length]}
+          onCloseRequest={() => setLightboxIndex(null)}
+          onMovePrevRequest={() =>
+            setLightboxIndex((lightboxIndex + images.length - 1) % images.length)
+          }
+          onMoveNextRequest={() => setLightboxIndex((lightboxIndex + 1) % images.length)}
+        />
+      )}
     </main>
   );
 }

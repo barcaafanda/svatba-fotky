@@ -1,93 +1,50 @@
 'use client';
-
 import { useState } from 'react';
 
 export default function UploadForm() {
+  const [file, setFile] = useState<File | null>(null);
+  const [type, setType] = useState<'image' | 'video'>('image');
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
-  const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(false);
-
-    const fileInput = e.currentTarget.elements.namedItem('file') as HTMLInputElement;
-    const file = fileInput?.files?.[0];
-
-    if (!file) {
-      setError('Nevybrán žádný soubor.');
-      return;
-    }
-
-    if (file.size > 300 * 1024 * 1024) {
-      setError('Soubor přesahuje limit 300 MB.');
-      return;
-    }
+  const handleUpload = async () => {
+    if (!file) return;
 
     setUploading(true);
-
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', 'ml_default');
 
-    try {
-      const cloudinaryRes = await fetch(
-        `https://api.cloudinary.com/v1_1/dskwsp31z/${file.type.startsWith('video') ? 'video' : 'image'}/upload`,
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
+    const resourceType = type === 'video' ? 'video' : 'image';
+    const cloudName = 'dskwsp31z';
 
-      const data = await cloudinaryRes.json();
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, {
+      method: 'POST',
+      body: formData,
+    });
 
-      if (!data.secure_url) {
-        throw new Error('Chyba při nahrávání na Cloudinary.');
-      }
-
-      const response = await fetch('/api/photos', {
+    const data = await res.json();
+    if (data.secure_url) {
+      await fetch('/api/photos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: data.secure_url,
-          public_id: data.public_id,
-          type: file.type || (file.name.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg'),
-        }),
+        body: JSON.stringify({ url: data.secure_url, public_id: data.public_id, type }),
       });
-
-      if (!response.ok) {
-        throw new Error('Chyba při ukládání do databáze.');
-      }
-
-      setSuccess(true);
-      fileInput.value = '';
-    } catch (err: any) {
-      setError(err.message || 'Nastala chyba.');
-    } finally {
-      setUploading(false);
+      window.location.reload();
     }
+
+    setUploading(false);
   };
 
   return (
-    <form onSubmit={handleUpload} className="flex flex-col items-center gap-4">
-      <input
-        type="file"
-        name="file"
-        accept="image/*,video/*"
-        className="block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
-        file:rounded file:border-0 file:text-sm file:font-semibold
-        file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-      />
-      <button
-        type="submit"
-        disabled={uploading}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded"
-      >
+    <div style={{ marginBottom: '20px' }}>
+      <input type="file" accept={type === 'image' ? 'image/*' : 'video/*'} onChange={e => setFile(e.target.files?.[0] || null)} />
+      <select onChange={e => setType(e.target.value as 'image' | 'video')} value={type}>
+        <option value="image">Obrázek</option>
+        <option value="video">Video</option>
+      </select>
+      <button onClick={handleUpload} disabled={uploading || !file}>
         {uploading ? 'Nahrávám...' : 'Nahrát'}
       </button>
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-      {success && <p className="text-green-500 text-sm">✅ Úspěšně nahráno</p>}
-    </form>
+    </div>
   );
 }
