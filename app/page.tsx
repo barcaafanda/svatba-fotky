@@ -19,7 +19,10 @@ export default function Home() {
 
   useEffect(() => {
     const fetchPhotos = async () => {
-      const { data, error } = await supabase.from('photos').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('photos')
+        .select('*')
+        .order('created_at', { ascending: false });
       if (!error && data) setPhotos(data);
     };
     fetchPhotos();
@@ -31,22 +34,54 @@ export default function Home() {
     <main>
       <h1>Fotky a videa ze svatby</h1>
       <UploadForm />
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px' }}>
-        {photos.map((photo, idx) => (
-          <div key={photo.id} style={{ width: '150px', cursor: photo.type === 'image' ? 'pointer' : 'default' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '10px',
+          marginTop: '20px',
+        }}
+      >
+        {photos.map((photo) => (
+          <div
+            key={photo.id}
+            style={{
+              width: '150px',
+              height: '150px',
+              overflow: 'hidden',
+              borderRadius: '8px',
+              position: 'relative',
+              backgroundColor: '#f3f3f3',
+              cursor: photo.type === 'image' ? 'pointer' : 'default',
+            }}
+          >
             {photo.type === 'image' ? (
               <img
                 src={photo.url}
                 alt=""
-                style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
                 onClick={() => setLightboxIndex(images.indexOf(photo.url))}
               />
             ) : (
-              <video src={photo.url} controls style={{ width: '100%', borderRadius: '8px' }} />
+              <video
+                src={photo.url}
+                controls
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
+              />
             )}
           </div>
         ))}
       </div>
+
       {lightboxIndex !== null && (
         <Lightbox
           mainSrc={images[lightboxIndex]}
@@ -56,7 +91,9 @@ export default function Home() {
           onMovePrevRequest={() =>
             setLightboxIndex((lightboxIndex + images.length - 1) % images.length)
           }
-          onMoveNextRequest={() => setLightboxIndex((lightboxIndex + 1) % images.length)}
+          onMoveNextRequest={() =>
+            setLightboxIndex((lightboxIndex + 1) % images.length)
+          }
         />
       )}
     </main>
