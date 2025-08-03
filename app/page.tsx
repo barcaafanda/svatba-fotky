@@ -1,9 +1,11 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import UploadForm from './components/UploadForm';
 import { supabase } from '@/lib/supabase';
-import Lightbox from 'react-image-lightbox';
-import 'react-image-lightbox/style.css';
+import Lightbox from 'yet-another-react-lightbox';
+import Video from 'yet-another-react-lightbox/plugins/video';
+import 'yet-another-react-lightbox/styles.css';
 
 type Photo = {
   id: number;
@@ -15,7 +17,8 @@ type Photo = {
 
 export default function Home() {
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [open, setOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -28,36 +31,53 @@ export default function Home() {
     fetchPhotos();
   }, []);
 
-  const images = photos.filter((p) => p.type === 'image').map((p) => p.url);
+  const slides = photos.map((photo) =>
+    photo.type === 'video'
+      ? {
+          type: 'video',
+          width: 1280,
+          height: 720,
+          poster: photo.url + '#t=1',
+          sources: [{ src: photo.url, type: 'video/mp4' }],
+        }
+      : {
+          type: 'image',
+          src: photo.url,
+        }
+  );
 
   return (
     <main
       className="min-h-screen bg-fixed bg-cover bg-center p-4"
       style={{ backgroundImage: 'url("/background.jpg")' }}
     >
-      <h1 className="text-white text-2xl font-bold mb-4 drop-shadow-lg">Fotky a videa ze svatby</h1>
+      <h1 className="text-white text-3xl font-semibold text-center mb-6">
+        Fotky a videa ze svatby
+      </h1>
+
       <UploadForm />
-      <div className="flex flex-wrap gap-4 justify-start mt-6">
+
+      <div className="flex flex-wrap gap-4 justify-center mt-6">
         {photos.map((photo, idx) => (
           <div key={photo.id} className="w-[150px]">
             {photo.type === 'image' ? (
               <img
                 src={photo.url}
                 alt=""
-                className="w-full h-auto rounded-lg cursor-pointer"
-                onClick={() => setLightboxIndex(images.indexOf(photo.url))}
+                className="w-full rounded cursor-pointer"
+                onClick={() => {
+                  setLightboxIndex(idx);
+                  setOpen(true);
+                }}
               />
             ) : (
               <video
                 src={photo.url}
-                controls
-                preload="metadata"
-                poster={`https://res.cloudinary.com/dskwsp31z/video/upload/so_1/${photo.public_id}.jpg`}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  display: 'block',
+                poster={photo.url + '#t=1'}
+                className="w-full rounded cursor-pointer"
+                onClick={() => {
+                  setLightboxIndex(idx);
+                  setOpen(true);
                 }}
               />
             )}
@@ -65,18 +85,13 @@ export default function Home() {
         ))}
       </div>
 
-      {lightboxIndex !== null && (
+      {open && (
         <Lightbox
-          mainSrc={images[lightboxIndex]}
-          nextSrc={images[(lightboxIndex + 1) % images.length]}
-          prevSrc={images[(lightboxIndex + images.length - 1) % images.length]}
-          onCloseRequest={() => setLightboxIndex(null)}
-          onMovePrevRequest={() =>
-            setLightboxIndex((lightboxIndex + images.length - 1) % images.length)
-          }
-          onMoveNextRequest={() =>
-            setLightboxIndex((lightboxIndex + 1) % images.length)
-          }
+          open={open}
+          close={() => setOpen(false)}
+          index={lightboxIndex}
+          slides={slides}
+          plugins={[Video]}
         />
       )}
     </main>
