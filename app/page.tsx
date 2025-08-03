@@ -1,11 +1,10 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import UploadForm from './components/UploadForm';
 import { supabase } from '@/lib/supabase';
+import 'yet-another-react-lightbox/styles.css';
 import Lightbox from 'yet-another-react-lightbox';
 import Video from 'yet-another-react-lightbox/plugins/video';
-import 'yet-another-react-lightbox/styles.css';
 
 type Photo = {
   id: number;
@@ -18,7 +17,7 @@ type Photo = {
 export default function Home() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [open, setOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -32,53 +31,54 @@ export default function Home() {
   }, []);
 
   const slides = photos.map((photo) =>
-    photo.type === 'video'
+    photo.type === 'image'
       ? {
-          type: 'video',
-          width: 1280,
-          height: 720,
-          poster: photo.url + '#t=1',
-          sources: [{ src: photo.url, type: 'video/mp4' }],
-        }
-      : {
           type: 'image',
           src: photo.url,
+        }
+      : {
+          type: 'video',
+          poster: `https://res.cloudinary.com/dskwsp31z/video/upload/so_1/${photo.public_id}.jpg`,
+          sources: [
+            {
+              src: photo.url,
+              type: 'video/mp4',
+            },
+          ],
         }
   );
 
   return (
     <main
       className="min-h-screen bg-fixed bg-cover bg-center p-4"
-      style={{ backgroundImage: 'url("/background.jpg")' }}
+      style={{ backgroundImage: 'url(\"/background.jpg\")' }}
     >
-      <h1 className="text-white text-3xl font-semibold text-center mb-6">
+      <h1 className="text-white text-2xl font-bold mb-4 drop-shadow-lg">
         Fotky a videa ze svatby
       </h1>
 
       <UploadForm />
 
-      <div className="flex flex-wrap gap-4 justify-center mt-6">
-        {photos.map((photo, idx) => (
+      <div className="flex flex-wrap gap-4 justify-start mt-6">
+        {photos.map((photo, i) => (
           <div key={photo.id} className="w-[150px]">
             {photo.type === 'image' ? (
               <img
                 src={photo.url}
                 alt=""
-                className="w-full rounded cursor-pointer"
+                className="w-full h-auto rounded-lg cursor-pointer"
                 onClick={() => {
-                  setLightboxIndex(idx);
+                  setIndex(i);
                   setOpen(true);
                 }}
               />
             ) : (
               <video
                 src={photo.url}
-                poster={photo.url + '#t=1'}
-                className="w-full rounded cursor-pointer"
-                onClick={() => {
-                  setLightboxIndex(idx);
-                  setOpen(true);
-                }}
+                controls
+                preload="metadata"
+                poster={`https://res.cloudinary.com/dskwsp31z/video/upload/so_1/${photo.public_id}.jpg`}
+                className="w-full h-auto rounded-lg"
               />
             )}
           </div>
@@ -89,8 +89,8 @@ export default function Home() {
         <Lightbox
           open={open}
           close={() => setOpen(false)}
-          index={lightboxIndex}
           slides={slides}
+          index={index}
           plugins={[Video]}
         />
       )}
