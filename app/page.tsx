@@ -51,8 +51,14 @@ export default function Home() {
               <video
                 src={photo.url}
                 controls
-                poster="/video-placeholder.jpg"
-                className="w-full h-auto rounded-lg"
+                preload="metadata"
+                poster={`https://res.cloudinary.com/dskwsp31z/video/upload/so_1/${photo.public_id}.jpg`}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
               />
             )}
           </div>
