@@ -31,22 +31,22 @@ export default function Home() {
   }, []);
 
   const slides = photos.map((photo) =>
-    photo.type === 'image'
-      ? {
-          type: 'image',
-          src: photo.url,
-        }
-      : {
-          type: 'video',
-          poster: `https://res.cloudinary.com/dskwsp31z/video/upload/so_1/${photo.public_id}.jpg`,
-          sources: [
-            {
-              src: photo.url,
-              type: 'video/mp4',
-            },
-          ],
-        }
-  );
+  photo.type === 'image'
+    ? {
+        type: 'image' as const,
+        src: photo.url,
+      }
+    : {
+        type: 'video' as const,
+        poster: `https://res.cloudinary.com/dskwsp31z/video/upload/so_1/${photo.public_id}.jpg`,
+        sources: [
+          {
+            src: photo.url,
+            type: 'video/mp4',
+          },
+        ],
+      }
+);
 
   return (
     <main
